@@ -1,0 +1,2 @@
+En el archivo de texto "Cities.txt", se debe escribir de la siguiente manera: "ciudad1,ciudad2", representando que las ciudades estan relacionadas.
+Se puede ingresar una ciudad nueva siempre y cuando se escriba de la forma antes mencionada.
