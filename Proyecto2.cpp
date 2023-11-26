@@ -9,19 +9,69 @@ using namespace std;
 
 struct Guardian 
 {
-    char nombre[50];
-    int poder;
+    string nombre;
+    int poder = 0;
     string ciudad;
     string maestro;
-    vector<Guardian*> hijos;
-
+    vector<Guardian> hijos;
 };
-
 struct Ciudad
 {
     string nombre;
 };
+struct arbolRanking 
+{
+    Guardian* guardian;
+    arbolRanking* izq;
+    arbolRanking* der;
+};
+arbolRanking* crearNodo(Guardian* n)
+{
+    arbolRanking* nuevo_nodo = new arbolRanking;
 
+    nuevo_nodo->guardian = n;
+    nuevo_nodo->der = NULL;
+    nuevo_nodo->izq = NULL;
+
+    return nuevo_nodo;
+}
+void insertarNodo(arbolRanking *&arbol, Guardian* guardian)
+{
+    if (arbol == NULL)
+    {
+        arbolRanking* nuevo_nodo = crearNodo(guardian);
+        arbol = nuevo_nodo;
+    }
+    else
+    {
+        double valorRaiz = arbol->guardian->poder;
+        if (guardian->poder < valorRaiz)
+        {
+            insertarNodo(arbol->izq, guardian);
+        }
+        else
+        {
+            insertarNodo(arbol->der, guardian);
+        }
+    }
+}
+void mostrarArbol(arbolRanking* arbol, int contador)
+{
+    if (arbol == NULL)
+    {
+        return;
+    }
+    else
+    {
+        mostrarArbol(arbol->der, contador + 1);
+        for (int i = 0; i < contador; i++)
+        {
+            cout << "   ";
+        }
+        cout << arbol->guardian->poder << endl;
+        mostrarArbol(arbol->izq, contador + 1);
+    }
+}
 class GrafoLista
 {
     int vertices;
@@ -76,7 +126,6 @@ public:
         }
     }
 };
-
 vector<string> leerCiudades()
 {
     vector<string> nombres;
@@ -147,47 +196,80 @@ vector<string> leerCiudades()
     }
     return nombres;
 }
-
 void leerConexiones(GrafoLista &grafo)
 {
-    ifstream file("C:/Users/acer/Desktop/Proyecto2/Proyecto2/cities.txt");
+    ifstream archivo("C:/Users/acer/Desktop/Proyecto2/Proyecto2/cities.txt");
 
-    if (file.is_open())
+    if (archivo.is_open())
     {
-        string line;
-        while (getline(file, line))
+        string linea;
+        while (getline(archivo, linea))
         {
-            // Crear un stringstream para facilitar la separación
-            istringstream ss(line);
+            istringstream ss(linea);
 
             string antesComa, despuesComa;
 
-            // Leer hasta la coma
             if (getline(ss, antesComa, ','))
             {
-                // Leer después de la coma
                 getline(ss, despuesComa);
             }
             else
             {
-                cerr << "Error al leer la línea: " << line << endl;
+                cerr << "Error al leer la línea: " << linea << endl;
             }
             grafo.agregarArista(antesComa, despuesComa);
         }
-        file.close();
+        archivo.close();
     }
     else
     {
         cerr << "No se pudo abrir el archivo: " << "Cities.txt" << endl;
     }
 }
+void leerGuardianes(arbolRanking *&raiz)
+{
+    ifstream archivo("C:/Users/acer/Desktop/Proyecto2/Proyecto2/guardians.txt");
+    vector<Guardian*> guardianes;
+
+    if (archivo.is_open())
+    {
+        string linea;
+
+        while (getline(archivo, linea)) {
+            istringstream ss(linea);
+            string token;
+
+            Guardian* nuevoguardian = new Guardian;
+
+            getline(ss, nuevoguardian->nombre, ',');
+            getline(ss, token, ',');
+            nuevoguardian->poder = stoi(token);
+            getline(ss, nuevoguardian->maestro, ',');
+            getline(ss, nuevoguardian->ciudad, ',');
+
+            guardianes.push_back(nuevoguardian);
+        }
+        archivo.close();
+    }
+    else
+    {
+        cerr << "No se pudo abrir el archivo: " << "Cities.txt" << endl;
+    }
+    for (int i = 0; i < guardianes.size(); i++)
+    {
+        insertarNodo(raiz, guardianes[i]);
+    }
+}
 
 int main()
 {
+    arbolRanking *raiz = NULL;
     vector<string> nombres = leerCiudades();
     GrafoLista grafo(nombres.size());
     grafo.setNames(nombres);
     leerConexiones(grafo);
-    grafo.mostrarGrafo();
+    //grafo.mostrarGrafo();
+    leerGuardianes(raiz);
+    mostrarArbol(raiz, 0);
     return 0;
 }
