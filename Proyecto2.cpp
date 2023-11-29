@@ -10,7 +10,6 @@ using namespace std;
 
 struct Guardian 
 {
-    int indice = 0;
     string nombre;
     int poder = 0;
     string ciudad;
@@ -72,12 +71,29 @@ void mostrarArbol(arbolRanking* arbol, int contador)
         mostrarArbol(arbol->der, contador + 1);
         if (arbol->guardian->poder > 90)
         {
-            cout << arbol->guardian->indice << ". Nombre: " << arbol->guardian->nombre << "         /// Guardian/candidato a guardian ///" << endl;
+            cout << "Nombre: " << arbol->guardian->nombre << "         /// Guardian/candidato a guardian ///" << endl;
             cout << "Nivel de poder: " << arbol->guardian->poder << endl;
         }
         if (arbol->guardian->poder < 90)
         {
-            cout << arbol->guardian->indice << ". Nombre: " << arbol->guardian->nombre << endl;
+            cout << "Nombre: " << arbol->guardian->nombre << endl;
+            cout << "Nivel de poder: " << arbol->guardian->poder << endl << endl;
+        }
+        mostrarArbol(arbol->izq, contador + 1);
+    }
+}
+void mostrarArbolsologuardianesJugables(arbolRanking* arbol, int contador)
+{
+    if (arbol == NULL)
+    {
+        return;
+    }
+    else
+    {
+        mostrarArbol(arbol->der, contador + 1);
+        if (arbol->guardian->poder < 90)
+        {
+            cout << "Nombre: " << arbol->guardian->nombre << endl;
             cout << "Nivel de poder: " << arbol->guardian->poder << endl << endl;
         }
         mostrarArbol(arbol->izq, contador + 1);
@@ -114,6 +130,40 @@ void mostrarGuardianesdelaCiudad(arbolMaestro* arbol, string ciudad)
     {
         mostrarGuardianesdelaCiudad(arbol->aprendices[i], ciudad);
     }
+}
+bool mostrarGuardianesdelaCiudadPelea(arbolMaestro* arbol, arbolMaestro* guardian)
+{
+    bool hayGuardian = false;
+    if (arbol == NULL)
+    {
+        cout << "El arbol esta vacio..." << endl;
+        return hayGuardian;
+    }
+
+    queue<arbolMaestro*> cola;
+    cola.push(arbol);
+
+    while (!cola.empty()) 
+    {
+        arbolMaestro* nodoActual = cola.front();
+        cola.pop();
+
+        if (nodoActual->guardian->nombre != guardian->guardian->nombre)
+        {
+            if (nodoActual->guardian->ciudad == guardian->guardian->ciudad)
+            {
+                cout << "- " << nodoActual->guardian->nombre << endl;
+                hayGuardian = true;
+            }
+        }
+        for (arbolMaestro* hijo : nodoActual->aprendices) 
+        {
+            cola.push(hijo);
+        }
+    }
+
+    cout << endl;
+    return hayGuardian;
 }
 class GrafoLista
 {
@@ -175,6 +225,20 @@ public:
             }
         }
     }
+    void mostrarCiudadesConectadas(string nombre)
+    {
+        for (int i = 0; i < vertices; ++i)
+        {
+            if (ciudades[i].nombre == nombre)
+            {
+                cout << "\nCiudades conectadas a " << nombre << ": \n";
+                for (const Ciudad& arista : listaAdy[i])
+                {
+                    cout << "- " << arista.nombre << "\n";
+                }
+            }
+        }
+    }
     void mostrarGrafo() 
     {
         cout << "Ciudades:\n";
@@ -201,6 +265,23 @@ public:
             if (arista.nombre == ciudad)
             {
                 return true;
+            }
+        }
+        return false;
+    }
+    bool encontrarCamino(string origen, string destino)
+    {
+        for (int i = 0; i < vertices; ++i)
+        {
+            if (ciudades[i].nombre == origen)
+            {
+                for (const Ciudad& arista : listaAdy[i])
+                {
+                    if (arista.nombre == destino)
+                    {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -362,7 +443,6 @@ void leerGuardianes(arbolRanking *&raiz, arbolMaestro *&raizmaestros, GrafoLista
             nuevoguardian->poder = stoi(token);
             getline(ss, nuevoguardian->maestro, ',');
             getline(ss, nuevoguardian->ciudad, ',');
-            nuevoguardian->indice = i;
             if (nuevoguardian->poder == 100)
             {
                 aviso100++;
@@ -383,7 +463,6 @@ void leerGuardianes(arbolRanking *&raiz, arbolMaestro *&raizmaestros, GrafoLista
                 system("pause");
                 exit(1);
             }
-            i++;
         }
         archivo.close();
     }
@@ -414,32 +493,45 @@ void mostrarArbolMaestros(arbolMaestro* arbol, int valor = 0)
         mostrarArbolMaestros(arbol->aprendices[i], valor + 4);
     }
 }
-arbolMaestro* buscar(arbolMaestro* arbol, int indice) 
+arbolMaestro* buscar(arbolMaestro* arbol, string indice) 
 {
-    if (arbol == NULL || arbol->guardian->indice == indice)
+    if (arbol == NULL) 
     {
-        return arbol;
+        return NULL;
     }
 
-    for (arbolMaestro* guardian : arbol->aprendices) 
+    queue<arbolMaestro*> cola;
+    cola.push(arbol);
+
+    while (!cola.empty()) 
     {
-        if (guardian->guardian->indice == indice) 
+        arbolMaestro* actual = cola.front();
+        cola.pop();
+
+        if (actual->guardian->nombre == indice) 
         {
-            return guardian;
+            return actual;
+        }
+
+        for (arbolMaestro* hijo : actual->aprendices) 
+        {
+            cola.push(hijo);
         }
     }
+
     return NULL;
 }
 
 int main()
 {
-    bool ciclo = true;
+    bool ciclo1 = true, ciclo2 = true, aux = false;
     int opcion = 0, opcion2 = 0;
     arbolRanking* raizRank = NULL;
     arbolMaestro* raizMaestros = NULL;
     int indice = 0;
     string linea, linea2;
-    arbolMaestro* player = NULL;
+    arbolMaestro* jugador = NULL;
+    arbolMaestro* enemigo = NULL;
     vector<string> nombres = leerCiudades();
     GrafoLista grafo(nombres.size());
     grafo.setNames(nombres);
@@ -461,33 +553,26 @@ int main()
             system("cls");
             break;
         case 2:
+            system("cls");
             mostrarArbol(raizRank, 0);
-            cout << endl << "Escriba el indice de la izquierda del nombre del guardian para ver sus detalles: ";
+            cout << endl << "Escriba el nombre exacto del guardian para ver sus detalles: ";
             getline(cin, linea);
-            try
-            {
-                indice = stoi(linea);
-            }
-            catch (const exception&)
-            {
-                cout << "Error: Ingrese un número válido." << endl;
-            }
-            player = buscar(raizMaestros, indice);
-            if (player == NULL)
+            jugador = buscar(raizMaestros, linea);
+            if (jugador == NULL)
             {
                 cout << "\nEl guardian ingresado no se encuentra, intentelo nuevamente...\n";
                 system("pause");
             }
             else
             {
-                cout << "\nNombre: " << player->guardian->nombre;
-                cout << "\nNivel de poder: " << player->guardian->poder;
-                cout << "\nCiudad: " << player->guardian->ciudad;
-                cout << "\nMaestro: " << player->guardian->maestro;
+                cout << "\nNombre: " << jugador->guardian->nombre;
+                cout << "\nNivel de poder: " << jugador->guardian->poder;
+                cout << "\nCiudad: " << jugador->guardian->ciudad;
+                cout << "\nMaestro: " << jugador->guardian->maestro;
                 cout << "\nAprendices: \n";
-                for (size_t i = 0; i < player->aprendices.size(); i++)
+                for (size_t i = 0; i < jugador->aprendices.size(); i++)
                 {
-                    cout << "- " << player->aprendices[i]->guardian->nombre << endl;
+                    cout << "- " << jugador->aprendices[i]->guardian->nombre << endl;
                 }
             }
             cout << endl;
@@ -537,6 +622,83 @@ int main()
             break;
         case 4:
             system("cls");
+            mostrarArbolsologuardianesJugables(raizRank, 0);
+            cout << "\nSeleccione el guardian ingresando su nombre exacto: ";
+            getline(cin, linea);
+            jugador = buscar(raizMaestros, linea);
+            if (jugador != NULL)
+            {
+                do
+                {
+                    system("cls");
+                    cout << "------- Guardian seleccionado -------\n";
+                    cout << "\nNombre: " << jugador->guardian->nombre;
+                    cout << "\nNivel de poder: " << jugador->guardian->poder;
+                    cout << "\nCiudad actual: " << jugador->guardian->ciudad;
+                    cout << "\nMaestro: " << jugador->guardian->maestro;
+
+                    cout << "\nQue accion desea realizar?: \n";
+                    cout << "1. Luchar\n";
+                    cout << "2. Viajar\n";
+                    cin >> opcion2;
+                    cin.ignore();
+                    if (opcion2 == 1)
+                    {
+                        cout << "\nGuardianes dentro de la ciudad: ";
+                        aux = mostrarGuardianesdelaCiudadPelea(raizMaestros, jugador);
+                        cout << endl;
+                        if (aux == true)
+                        {
+                            cout << "\nIngrese el nombre del guardian con el que desea pelear: ";
+                            getline(cin, linea);
+                            enemigo = buscar(raizMaestros, linea);
+                            if (enemigo != NULL)
+                            {
+
+                            }
+                            else
+                            {
+                                cout << "El nombre ingresado es invalido...";
+                                system("pause");
+                            }
+                        }
+                        else
+                        {
+                            cout << "No hay guardianes en esta ciudad...\n";
+                        }
+
+                        system("pause");
+                    }
+                    else if (opcion2 == 2)
+                    {
+                        grafo.mostrarCiudadesConectadas(jugador->guardian->ciudad);
+                        cout << "\nIngrese el nombre exacto de la ciudad a la que desea viajar: ";
+                        getline(cin, linea);
+                        if (grafo.validarCiudad(linea))
+                        {
+                            jugador->guardian->ciudad = linea;
+                        }
+                        else
+                        {
+                            cout << "Nombre de la ciudad es incorrecto...\n";
+                        }
+
+                        cout << endl;
+                        system("pause");
+                    }
+                    else
+                    {
+                        cout << "Opcion invalida...\n";
+                        system("pause");
+                    }
+
+                } while (ciclo2);
+            }
+            else
+            {
+                cout << "\nEl guardian no fue encontrado...\n";
+            }
+            system("pause");
             break;
         case 5:
             system("cls");
@@ -548,7 +710,7 @@ int main()
             system("pause");
             break;
         }
-    } while (ciclo == 1);
+    } while (ciclo1 == 1);
 
     return 0;
 }
