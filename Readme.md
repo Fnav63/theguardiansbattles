@@ -1,4 +1,4 @@
-                                                                                                           //// Funciones ////
+//// Funciones ////
 
 - crearNodo: Se crea el nodo para el arbol binario, un código estándar de creación de nodo.
 
