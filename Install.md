@@ -1,4 +1,4 @@
-- Este proyecto se creó y compiló usando Visual Studio 2019
+- Este proyecto se creó y compiló usando Visual Studio 2019, por lo que se recomienda el uso de esta IDE para su funcionamiento.
 - Para la correcta ejecución del programa se debe tomar en cuenta la ubicación de los archivos .conf.
 Para las líneas de código 327 y 396 se debe escribir la ubicación dentro de su dispositivo del archivo cities.conf, por ejemplo:
 "C:/Users/acer/Desktop/Proyecto2/cities.conf"
