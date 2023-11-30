@@ -1,0 +1,1 @@
+- Este proyecto se creó y compiló usando Visual Studio 2019
